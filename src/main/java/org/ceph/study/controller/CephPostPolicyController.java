@@ -1,11 +1,16 @@
 package org.ceph.study.controller;
 
-import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.ClientException;
+import com.aliyun.oss.common.auth.HmacSHA1Signature;
 import com.aliyun.oss.common.utils.BinaryUtil;
+import com.aliyun.oss.common.utils.DateUtil;
 import com.aliyun.oss.model.MatchMode;
 import com.aliyun.oss.model.PolicyConditions;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 import net.sf.json.JSONObject;
-import org.jets3t.service.security.AWSCredentials;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -13,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.sql.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -66,7 +72,6 @@ public class CephPostPolicyController {
         AmazonS3 conn = new AmazonS3Client(credentials);
         conn.setEndpoint(endpoint);
 
-        OSSClient client = new OSSClient(endpoint, accessId, accessKey);
         try {
             long expireTime = 30;
             long expireEndTime = System.currentTimeMillis() + expireTime * 1000;
@@ -75,10 +80,10 @@ public class CephPostPolicyController {
             policyConds.addConditionItem(PolicyConditions.COND_CONTENT_LENGTH_RANGE, 0, 1048576000);
             policyConds.addConditionItem(MatchMode.StartWith, PolicyConditions.COND_KEY, dir);
 
-            String postPolicy = client.generatePostPolicy(expiration, policyConds);
+            String postPolicy = generatePostPolicy(expiration, policyConds);
             byte[] binaryData = postPolicy.getBytes("utf-8");
             String encodedPolicy = BinaryUtil.toBase64String(binaryData);
-            String postSignature = client.calculatePostSignature(postPolicy);
+            String postSignature = calculatePostSignature(postPolicy, accessKey);
 
             Map<String, String> respMap = new LinkedHashMap<String, String>();
             respMap.put("accessid", accessId);
@@ -96,6 +101,27 @@ public class CephPostPolicyController {
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public String generatePostPolicy(java.util.Date expiration, PolicyConditions conds) {
+        String formatedExpiration = DateUtil.formatIso8601Date(expiration);
+        String jsonizedExpiration = String.format("\"expiration\":\"%s\"", new Object[]{formatedExpiration});
+        String jsonizedConds = conds.jsonize();
+        StringBuilder postPolicy = new StringBuilder();
+        postPolicy.append("{");
+        postPolicy.append(String.format("%s,%s", new Object[]{jsonizedExpiration, jsonizedConds}));
+        postPolicy.append("}");
+        return postPolicy.toString();
+    }
+
+    public String calculatePostSignature(String postPolicy, String secretAccessKey) {
+        try {
+            byte[] ex = postPolicy.getBytes("utf-8");
+            String encPolicy = BinaryUtil.toBase64String(ex);
+            return new HmacSHA1Signature().computeSignature(secretAccessKey, encPolicy);
+        } catch (UnsupportedEncodingException var4) {
+            throw new ClientException("Unsupported charset: " + var4.getMessage());
         }
     }
 
