@@ -1,16 +1,12 @@
 
-accessid = ''
-accesskey = ''
-host = ''
-policyBase64 = ''
-signature = ''
-callbackbody = ''
-filename = ''
-key = ''
-expire = 0
-g_object_name = ''
-g_object_name_type = ''
-now = timestamp = Date.parse(new Date()) / 1000;
+host = 'http://192.168.30.11/helloworld/2.png?x-amz-acl=public-read&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20170627T032721Z&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Expires=299&X-Amz-Credential=U2A27HEBIS06RIF3JOBC%2F20170627%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=edee7f0b48b663d70c95ef70d6078f6199f6d5c80c3f339d3792664a9d9b1861';
+theDate = '';
+Authorization = '';
+ContentType = 'image/png';
+ContentMD5 = '';
+callbackbody = '';
+key = '2.png';
+xAmzAcl = "public-read";
 
 function send_request()
 {
@@ -51,22 +47,17 @@ function check_object_radio() {
 
 function get_signature()
 {
-    //可以判断当前expire是否超过了当前时间,如果超过了当前时间,就重新取一下.3s 做为缓冲
-    now = timestamp = Date.parse(new Date()) / 1000;
-    if (expire < now + 3)
-    {
-        body = send_request()
-        var obj = eval ("(" + body + ")");
-        host = obj['host']
-        policyBase64 = obj['policy']
-        accessid = obj['accessid']
-        signature = obj['signature']
-        expire = parseInt(obj['expire'])
-        callbackbody = obj['callback']
-        key = obj['dir']
-        return true;
-    }
-    return false;
+    //body = send_request()
+    //var obj = eval ("(" + body + ")");
+    //
+    //host = obj['host'];
+    //theDate = obj['Date'];
+    //Authorization = obj['Authorization'];
+    //ContentType = obj['ContentType'];
+    //ContentMD5 = obj['ContentMD5'];
+    //callbackbody = obj['callback'];
+    //xAmzAcl = obj['xAmzAcl'];
+    return true;
 };
 
 function random_string(len) {
@@ -128,12 +119,15 @@ function set_upload_param(up, filename, ret)
         calculate_object_name(filename)
     }
     new_multipart_params = {
-        'key' : g_object_name,
-        'policy': policyBase64,
-        'OSSAccessKeyId': accessid,
+        'Content-Type': ContentType,
+        'x-amz-acl': xAmzAcl,
+        //'host': host,
+        //'Date': theDate,
+        //'Authorization': Authorization,
+        //'Content-MD5': ContentMD5,
+        //'key' : key
         'success_action_status' : '200', //让服务端返回200,不然，默认会返回204
-        'callback' : callbackbody,
-        'signature': signature
+        'callback' : callbackbody
     };
 
     up.setOption({
@@ -152,6 +146,7 @@ var uploader = new plupload.Uploader({
 	flash_swf_url : 'js/lib/plupload-2.1.2/js/Moxie.swf',
 	silverlight_xap_url : 'js/lib/plupload-2.1.2/js/Moxie.xap',
     url : 'http://oss.aliyuncs.com',
+    //url : host,
 
     filters: {
         mime_types : [ //只允许上传图片和zip文件

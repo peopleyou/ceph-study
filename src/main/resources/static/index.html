@@ -41,9 +41,6 @@
 <div id="container">
     <a id="selectfiles" href="javascript:void(0);" class='btn'>选择文件</a>
     <a id="postfiles" href="javascript:void(0);" class='btn'>开始上传</a>
-    <a id="aTestCORS" href="javascript:void(0);" class='btn'>测试跨域</a>
-    <a id="aTestCORS1" href="javascript:void(0);" class='btn'>测试本地jsonp</a>
-    <a id="aTestCORS2" href="javascript:void(0);" class='btn'>测试本地header</a>
 </div>
 
 <pre id="console"></pre>
@@ -54,48 +51,6 @@
 <script type="text/javascript" src="js/lib/plupload-2.1.2/js/plupload.full.min.js"></script>
 <script type="text/javascript" src="js/upload.js"></script>
 <script type="text/javascript">
-    $(document).ready(function () {
-//        $("#aTestCORS").on("click", function () {
-//            $.ajax({
-//                type:"get",
-//                url:"http://192.168.30.11:7480",/*url写异域的请求地址*/
-//                dataType:"jsonp",/*加上datatype*/
-//                jsonpCallback:"callback",/*设置一个回调函数，名字随便取，和下面的函数里的名字相同就行*/
-//                success:function(){
-//                    alert("ok");
-//                }
-//            });
-//        });
-
-        $("#aTestCORS1").on("click", function () {
-            $.ajax({
-                type: "get",
-                url: "http://localhost:8080/testCORS",
-                dataType: "jsonp",
-                jsonp: "callbackparam",//传递给请求处理程序或页面的，用以获得jsonp回调函数名的参数名(默认为:callback)
-                jsonpCallback: "ajaxTestFn",//自定义的jsonp回调函数名称，默认为jQuery自动生成的随机函数名
-                success: function (json) {
-                    alert(json["test"]);
-                },
-                error: function () {
-                    alert('fail');
-                }
-            });
-        });
-
-        $("#aTestCORS2").on("click", function () {
-            $.ajax({
-                type: "get",
-                url: "http://localhost:8080/testCORSHeader",
-                success: function (data) {
-                    alert(data);
-                },
-                error: function () {
-                    alert('fail');
-                }
-            });
-        });
-    });
 
     function ajaxTestFn(json) {
         alert(22 + " ---" + json);
